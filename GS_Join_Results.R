@@ -6,7 +6,8 @@ Xpackagers <- c('AlphaSimR','bWGR','parallel','foreach','doParallel',
                 'ranger','Rcpp','keras','verification','rrBLUP','reshape2','ScottKnott','viridis')
 #install.packages(Xpackagers,dep=TRUE)
 XXX <- lapply(Xpackagers, function(x){suppressMessages(require(x,quietly = TRUE, character.only = TRUE))})
-MYC <- c("red","blue", "darkgreen","grey", "black","green",'orange','darkblue')
+# bMYC <- c("red","blue", "darkgreen","grey", "black","green",'orange','darkblue')
+MYC <- c("blue",'yellow',"darkorange","blueviolet","green","red",'aquamarine',"darkgreen")
 # load data   ------------------------------------------------------------------
 load('230673_All.RData')
 JOBID <- 'ALL'
@@ -350,7 +351,7 @@ RES_AGVM <- transform(RES_AGVM,
 
 a <- ggplot(RES_AGVM,aes(x=sim, y=value,color=GS_Model)) +
   geom_smooth(method = "loess",lwd=1.25,se=FALSE,span = .4) +
-  xlab('Breeding Generation')+
+  xlab('Breeding cycles')+
   ylab(' Accuracy by Genetic variance')+
   ylim(c(0,0.25))+
   facet_grid(Strategy~Selection_Intensity, labeller = label_both)+
@@ -378,7 +379,7 @@ dev.off()
 # a <- ggplot(RES_AHeM,aes(x=sim, y=value,color=GS_Model)) +
 #   #geom_point(cex=0.5)+
 #   geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#   xlab('Breeding Generation')+
+#   xlab('Breeding cycles')+
 #   ylab('Heritability variance by Accuracy')+
 #   #ylim(c(-50,150))+
 #   facet_grid(Strategy~Intensity)
@@ -386,7 +387,7 @@ dev.off()
 # b <- ggplot(RES_AHeM,aes(x=sim, y=value,color=GS_Model)) +
 #   geom_point(cex=0.5)+
 #   geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#   xlab('Breeding Generation')+
+#   xlab('Breeding cycles')+
 #   ylab('Heritability variance by Accuracy')+
 #   ylim(c(-250,250))+
 #   facet_grid(Strategy~Intensity)
@@ -400,7 +401,7 @@ dev.off()
 #   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=GS_Model)) +
 #     geom_point(cex=0.5)+
 #     #geom_smooth(method = "loess",lwd=1,se=FALSE) +
-#     xlab('Breeding Generation')+
+#     xlab('Breeding cycles')+
 #     ylab(i)+
 #     facet_grid(Strategy~Intensity)+
 #     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
@@ -412,7 +413,7 @@ dev.off()
 #   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=GS_Model)) +
 #     #   geom_point(cex=0.5)+
 #     geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#     xlab('Breeding Generation')+
+#     xlab('Breeding cycles')+
 #     ylab(i)+
 #     facet_grid(Strategy~Intensity)+
 #     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
@@ -424,12 +425,12 @@ dev.off()
 
 jpeg(paste0('Final_mu_Results.jpg'),width = 250, height = 180 ,units='mm',quality=95,res=900)
 a <- ggplot(RES1[RES1$par %in% 'Mu',],aes(x=sim, y=value,color=GS_Model)) +
-  geom_smooth(method = "loess",lwd=1.25,se=FALSE,span = 0.1) +
-  xlab('Breeding Generation')+
+  geom_smooth(method = "loess",lwd=0.8,se=FALSE,span = 0.1)+
+  xlab('Breeding cycles')+
   ylab(expression('Population mean'~(t.ha^{-1})))+
   ylim(c(0,53))+
   facet_grid(Strategy~Selection_Intensity, labeller = label_both)+
-  theme_bw()+
+    theme_bw()+
   scale_colour_manual(values = MYC )+
   guides(color=guide_legend("Models:",nrow=1,byrow=TRUE))+
   theme(legend.position = "bottom", legend.box = "horizontal")
@@ -438,8 +439,8 @@ dev.off()
 
 jpeg(paste0('Final_variance_Results.jpg'),width = 250, height = 180 ,units='mm',quality=95,res=900)
 a <- ggplot(RES1[RES1$par %in% 'GV',],aes(x=sim, y=value,color=GS_Model)) +
-  geom_smooth(method = "loess",lwd=1.25,se=FALSE,span = 0.4) +
-  xlab('Breeding Generation')+
+  geom_smooth(method = "loess",lwd=0.8,se=FALSE,span = 0.4) +
+  xlab('Breeding cycles')+
   ylab(expression(sigma[g]^{2}))+
   ylim(c(0,120))+
   facet_grid(Strategy~Selection_Intensity, labeller = label_both)+
@@ -452,8 +453,8 @@ dev.off()
 
 jpeg(paste0('Final_Accuracy_Results.jpg'),width = 250, height = 180 ,units='mm',quality=95,res=900)
 a <- ggplot(RES1[RES1$par %in% 'Accuracy',],aes(x=sim, y=value,color=GS_Model)) +
-  geom_smooth(method = "loess",lwd=1.25,se=FALSE,span = 0.3) +
-  xlab('Breeding Generation')+
+  geom_smooth(method = "loess",lwd=0.8,se=FALSE,span = 0.3) +
+  xlab('Breeding cycles')+
   ylab(expression(Accuracy))+
   ylim(c(0,1.05))+
   facet_grid(Strategy~Selection_Intensity, labeller = label_both)+
@@ -470,7 +471,7 @@ dev.off()
 #   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=Strategy)) +
 #     geom_point(cex=0.5)+
 #     #geom_smooth(method = "loess",lwd=1,se=FALSE) +
-#     xlab('Breeding Generation')+
+#     xlab('Breeding cycles')+
 #     ylab(i)+
 #     facet_grid(GS_Model ~ Intensity)+
 #     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
@@ -484,7 +485,7 @@ dev.off()
 #   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=Strategy)) +
 #     #geom_point(cex=0.5)+
 #     geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#     xlab('Breeding Generation')+
+#     xlab('Breeding cycles')+
 #     ylab(i)+
 #     facet_grid(GS_Model ~ Intensity)+
 #     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
@@ -499,7 +500,7 @@ dev.off()
 #   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=as.factor(Intensity))) +
 #     geom_point(cex=0.5)+
 #     # geom_smooth(method = "loess",lwd=1,se=FALSE) +
-#     xlab('Breeding Generation')+
+#     xlab('Breeding cycles')+
 #     ylab(i)+
 #     facet_grid( Strategy ~ GS_Model)+
 #     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
@@ -513,7 +514,7 @@ dev.off()
 #   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=as.factor(Intensity))) +
 #     #geom_point(cex=0.5)+
 #     geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#     xlab('Breeding Generation')+
+#     xlab('Breeding cycles')+
 #     ylab(i)+
 #     facet_grid( Strategy ~ GS_Model)+
 #     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
@@ -579,7 +580,7 @@ write.csv(RES_x,paste0(JOBID,'_o_Results_meanMelt.csv'),row.names = F)
 for(i in unique(RES_x$variable)){
   a <- ggplot(RES_x[RES_x$variable %in% i,],aes(x=sim, y=value,color=iGS_Model)) +
     geom_smooth(method = "loess",lwd=1.25,se=FALSE) +
-    xlab('Breeding Generation')+
+    xlab('Breeding cycles')+
     ylab(i)+
     facet_grid(iStrategy~iIntensity, labeller = label_both)+
     theme_bw()+
@@ -594,7 +595,7 @@ for(i in unique(RES_x$variable)){
 # for(i in unique(RES_x$variable)){
 #   a <- ggplot(RES_x[RES_x$variable %in% i,],aes(x=sim, y=value,color=iStrategy)) +
 #     geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#     xlab('Breeding Generation')+
+#     xlab('Breeding cycles')+
 #     ylab(i)+
 #     facet_grid(iGS_Model~iIntensity)+
 #     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
@@ -606,7 +607,7 @@ for(i in unique(RES_x$variable)){
 # for(i in unique(RES_x$variable)){
 #   a <- ggplot(RES_x[RES_x$variable %in% i,],aes(x=sim, y=value,color=as.factor(iIntensity))) +
 #     geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#     xlab('Breeding Generation')+
+#     xlab('Breeding cycles')+
 #     ylab(i)+
 #     facet_grid(iStrategy~iGS_Model)+
 #     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
@@ -665,6 +666,6 @@ ggplot(data = dat_out) +
   geom_tile(aes(x = sim, y = Intensity, fill = pred)) +
   scale_fill_gradientn(colours = mycol,limits=c(2,max(dat_out$pred)))+
   facet_grid(Strategy~GS_Model, labeller = label_both)+
-  xlab('Breeding Generation')+
+  xlab('Breeding cycles')+
   ylab('Selection intensity (%)')
 dev.off()
