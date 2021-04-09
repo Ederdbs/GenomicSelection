@@ -6,7 +6,7 @@ if(TRUE){
 }else{
   library('AlphaSimR')
   set.seed(123)
-  Ne <- 106  # Tsuda 2015 BMC
+  Ne <- 106  
   segSites  <-  round(20000/20,0)  # Genome sequence of the palaeopolyploid soybean
   founderPop <- quickHaplo(nInd=200,
                            nChr=20,
@@ -22,28 +22,18 @@ XXX <- lapply(Xpackagers, function(x){suppressMessages(require(x,quietly = TRUE,
 # Simulation Parameters  -------------------------------------------------------
 Number_of_runs = 1
 Number_of_generations = 100
-Intensity <- c(2.5,5,7.5,10)/100#c(0.005,0.01,0.025,0.05)
-FS <- list('1'=c(300,50),
-           '2'=c(250,60),
-           '3'=c(200,75),
-           '4'=c(150,100),
-           '5'=c(100,150))
+Intensity <- c(2.5,5,7.5,10)/100
+FS <- list('1'=c(300,50), #F1 and F2 size
+           '2'=c(250,60), #F1 and F2 size
+           '3'=c(200,75), #F1 and F2 size
+           '4'=c(150,100), #F1 and F2 size
+           '5'=c(100,150)) #F1 and F2 size
 
 GS_Model <- list(
-  #'XGB' = function(y,gen){require(xgboost); X = as(data.matrix(gen), "dgCMatrix"); fit0 = xgboost(data=X,label=y,params=list(subsample=0.25),nrounds=20,objective="reg:squarederror"); return(list(hat=predict(fit0,X)))},
-  #'DNN' = function(y,gen){FNN(as.matrix(y),gen)},
-  #'RF' = function(y,gen,...){list(hat=ranger::ranger(y~.,data.frame(y=y,gen),verbose = FALSE, save.memory = TRUE,write.forest = FALSE,...)$predictions)},
-  #'RKHS' = function(y,gen){ K = GAU(gen); diag(K)=diag(K)+0.00001; E = eigen(K,symmetric = T); fit = emML(y,E$vectors,E$values); return(fit)},
-  #'BayesCpi'=BayesCpi,
-  #'BayesDpi'=BayesDpi,
   'GBLUP'=emML,
-  #'RR'=emRR,
   'BayesA'=emBA,
   'BayesB'=emBB,
-  #'BayesC'=emBC,
-  #'BayesL'=emBL,
   'FLM' = emDE,
-  #'Randon' = function(y,gen){return(list(hat=sample(y)))},
   'Gv'= function(y,gen){return(list(hat=NA))},
   'Pheno' = function(y,gen){return(list(hat=NA))}
 )
@@ -64,7 +54,6 @@ cat(paste('Number of Simulation: ',nrow(POSSI),'\n'))
 POPBestIntensity <- 0.3
 NCgs <- 3    
 ## Trait parameter -------------------------------------------------------------
-#GxE_corr = 0.4912 ;#By_Loc_H2 = 0.0971 ; #Across_Loc_H2 = 0.5769;#h2= 0.12; #Acroos location 77; # GxE = 77; #Env = 120
 mean = 60 # From SoyNAN 
 var = 77  # From SoyNAN 
 varGxE = 77 # From SoyNAN 
@@ -73,7 +62,7 @@ corA = matrix(1,nrow=1)
 corGxE = matrix(1,nrow=1)
 nReps=1
 ## Founder POP and Simulation Parameters ----------------------------------------
-nSnpPerChr <-  round(6000/20,0) # Illumina 20K same soyNAN http://journals.atlas-publishing.org/index.php/PGGB/article/view/154
+nSnpPerChr <-  round(6000/20,0) 
 nQtlPerChr <- segSites * 0.7
 SP <- SimParam$new(founderPop)
 SP$addSnpChip(nSnpPerChr=nSnpPerChr)
@@ -191,8 +180,8 @@ if(os == 'Windows'){
   hosts <- as.vector(unique(unlist(strsplit(as.character(Sys.getenv("LSB_HOSTS"))," "))))
   nh <- length(hosts)
   nc <- length(unlist(strsplit(as.character(Sys.getenv("LSB_HOSTS"))," ")))-1
-
-
+  
+  
   cl <- parallel::makePSOCKcluster(names=rep(hosts , each = floor(nc/nh)),
                                    outfile = "debug.txt",
                                    master=nsl(Sys.info()['nodename']),

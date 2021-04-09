@@ -4,9 +4,7 @@ rm(list=ls())
 Xpackagers <- c('AlphaSimR','bWGR','parallel','foreach','doParallel',
                 'reshape','ggplot2','gridExtra','lubridate','plyr',
                 'ranger','Rcpp','keras','verification','rrBLUP','reshape2','ScottKnott','viridis')
-#install.packages(Xpackagers,dep=TRUE)
 XXX <- lapply(Xpackagers, function(x){suppressMessages(require(x,quietly = TRUE, character.only = TRUE))})
-# bMYC <- c("red","blue", "darkgreen","grey", "black","green",'orange','darkblue')
 MYC <- c("blue",'yellow',"darkorange","blueviolet","green","red",'aquamarine',"darkgreen")
 # load data   ------------------------------------------------------------------
 load('230673_All.RData')
@@ -44,9 +42,8 @@ RES1 <- transform(RES1,
                   value=as.numeric(as.character(value)),
                   sim=as.numeric(as.numeric(sim)),
                   par=as.character(par))
-#write.csv(RES1,paste0(JOBID,'_o_ResultsALLMelt.csv'),row.names = F)
-#save.image('ALLData.RData')
-#Generations <- c('Mu5','Mu10','Mu15','Mu50','Mu20','Mu75','Mu100','Mu150','Mu200')
+write.csv(RES1,paste0(JOBID,'_o_ResultsALLMelt.csv'),row.names = F)
+save.image('ALLData.RData')
 Generations <- c('Mu10','Mu100','Mu200')
 ### Gain versus selection intensity --------------------------------------------
 pdf('ALL_Gain_x_SI_1.pdf',w=15,h=10)
@@ -107,7 +104,6 @@ for(t in Generations){
   con <- con+1
   
 }
-
 restSK <- ldply(res)
 restSK$t <- as.numeric(as.character(gsub('Mu','',restSK$t)))
 restSK <- cbind(restSK,ldply(strsplit(restSK$V2.x,'_')))
@@ -287,6 +283,24 @@ rest1 <- dcast(rest1, V2 + V1 ~ variable)
 colnames(rest1) <- c('Strategy','SI','Estimate','StdError','Pvalue','R^2')
 write.csv(rest1,'GeneticDrifft.csv',row.names = FALSE)
 
+
+rest1$SI <- factor(as.character(rest1$SI),levels = c( '2.5',  '5',  '7.5', '10'))
+
+jpeg(paste0('Final_VarianceDrifft_Results.jpg'),width = 150, height = 100 ,units='mm',quality=95,res=900)
+a <- ggplot(rest1,aes(x=Strategy, y=Estimate,fill=SI)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_errorbar(aes(ymin=Estimate- StdError, ymax=Estimate+ StdError), width=.2,
+                position=position_dodge(.9))+
+  xlab('Breeding Strategy')+
+  ylab(expression("%"~sigma[g]^{2}~"loss per cycle"))+
+  theme_bw()+
+  scale_colour_manual(values = MYC )+
+  guides(color=guide_legend("Models:",nrow=1,byrow=TRUE))
+print(a)
+dev.off()
+
+
+
 ### slice in cyles -------------------------------------------------------------
 RESsli <- RES[,c(1:4,grep('[A-z]5$|[A-z]10$|[A-z]15$|[A-z]20$|[A-z]100$|[A-z]200$',colnames(RES)))]
 RESsli$GG5 <- (RES$Mu5/RES$Mu1-1) * 100
@@ -322,23 +336,7 @@ RESsliM_x <- dcast(RESsliM, GS_Model+Strategy+Intensity~par+sim,
                    fun.aggregate=function(x){return(paste(round(mean(x),2),'(',round(sd(x),2),')',sep=''))})
 write.csv(RESsliM_x ,'summaryALL.csv',row.names = FALSE)
 
-# RESsliM_xModel <- dcast(RESsliM, GS_Model~par+sim,
-#                         fun.aggregate=function(x){return(paste(round(mean(x),2),'(',round(sd(x),2),')',sep=''))})
-# write.csv(RESsliM_x ,'summaryALLModel.csv',row.names = FALSE)
-# 
-# RESsliM_xStrategy <- dcast(RESsliM, Strategy~par+sim,
-#                            fun.aggregate=function(x){return(paste(round(mean(x),2),'(',round(sd(x),2),')',sep=''))})
-# write.csv(RESsliM_x ,'summaryALLStrategy.csv',row.names = FALSE)
-# 
-# RESsliM_xIntensity <- dcast(RESsliM, Intensity~par+sim,
-#                             fun.aggregate=function(x){return(paste(round(mean(x),2),'(',round(sd(x),2),')',sep=''))})
-# write.csv(RESsliM_x ,'summaryALLIntensity.csv',row.names = FALSE)
-# 
-# RESsliM_xGS_Model_Strategy <- dcast(RESsliM, GS_Model+Strategy~par+sim,
-#                                     fun.aggregate=function(x){return(paste(round(mean(x),2),'(',round(sd(x),2),')',sep=''))})
-# write.csv(RESsliM_x ,'summaryALLGS_Model_Strategy.csv',row.names = FALSE)
-
-### Acurracy and genetic variance ----------------------------------------------
+### Accuracy and genetic variance ----------------------------------------------
 RES_AGV <- cbind(RES[,c('S','GS_Model','Strategy','Intensity','Selection_Intensity')],
                  ACbyGV=RES[,grep('Accuracy[0-9]{3,}$',colnames(RES))]/sqrt(RES[,grep('GV[0-9]{3,}$',colnames(RES))])
 )
@@ -364,64 +362,6 @@ a <- ggplot(RES_AGVM,aes(x=sim, y=value,color=GS_Model)) +
 jpeg('Final_Accuracy_by_GeneticVariance.jpg',width = 250, height = 180 ,units='mm',quality=95,res=900)
 print(a)
 dev.off()
-
-### Acurracy and heritability  ----------------------------------------------
-# RES_AHe <- cbind(RES[,c(1:4)],
-#                  ACbyGV=RES[,grep('He[0-9]{3,}$',colnames(RES))]/RES[,grep('Accuracy[0-9]{3,}$',colnames(RES))]
-# )
-# 
-# RES_AHeM <- melt(RES_AHe,id=1:4)
-# RES_AHeM$sim <- gsub('[A-z.]','',RES_AHeM$variable)
-# RES_AHeM <- transform(RES_AHeM,
-#                       value=as.numeric(as.character(value)),
-#                       sim=as.numeric(as.numeric(sim)))
-# 
-# a <- ggplot(RES_AHeM,aes(x=sim, y=value,color=GS_Model)) +
-#   #geom_point(cex=0.5)+
-#   geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#   xlab('Breeding cycles')+
-#   ylab('Heritability variance by Accuracy')+
-#   #ylim(c(-50,150))+
-#   facet_grid(Strategy~Intensity)
-# 
-# b <- ggplot(RES_AHeM,aes(x=sim, y=value,color=GS_Model)) +
-#   geom_point(cex=0.5)+
-#   geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#   xlab('Breeding cycles')+
-#   ylab('Heritability variance by Accuracy')+
-#   ylim(c(-250,250))+
-#   facet_grid(Strategy~Intensity)
-# 
-# pdf('Heritability_by_Accuracy.pdf',w=15,h=10)
-# print(a)
-# print(b)
-# dev.off()
-### compare Models--------------------------------------------------------------
-# for(i in unique(RES1$par)[1:7]){
-#   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=GS_Model)) +
-#     geom_point(cex=0.5)+
-#     #geom_smooth(method = "loess",lwd=1,se=FALSE) +
-#     xlab('Breeding cycles')+
-#     ylab(i)+
-#     facet_grid(Strategy~Intensity)+
-#     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
-#   pdf(paste0(JOBID,'_GSModel_',i,'_Points_Results.pdf'),w=20,h=15)
-#   print(a)
-#   dev.off()
-# }
-# for(i in unique(RES1$par)[1:7]){
-#   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=GS_Model)) +
-#     #   geom_point(cex=0.5)+
-#     geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#     xlab('Breeding cycles')+
-#     ylab(i)+
-#     facet_grid(Strategy~Intensity)+
-#     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
-#   pdf(paste0(JOBID,'_GSModel_',i,'_Lines_Results.pdf'),w=20,h=15)
-#   print(a)
-#   dev.off()
-# }
-
 
 jpeg(paste0('Final_mu_Results.jpg'),width = 250, height = 180 ,units='mm',quality=95,res=900)
 a <- ggplot(RES1[RES1$par %in% 'Mu',],aes(x=sim, y=value,color=GS_Model)) +
@@ -464,65 +404,6 @@ a <- ggplot(RES1[RES1$par %in% 'Accuracy',],aes(x=sim, y=value,color=GS_Model)) 
   theme(legend.position = "bottom", legend.box = "horizontal")
 print(a)
 dev.off()
-
-
-### compare Strategy -----------------------------------------------------------
-# for(i in unique(RES1$par)){
-#   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=Strategy)) +
-#     geom_point(cex=0.5)+
-#     #geom_smooth(method = "loess",lwd=1,se=FALSE) +
-#     xlab('Breeding cycles')+
-#     ylab(i)+
-#     facet_grid(GS_Model ~ Intensity)+
-#     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
-#   
-#   pdf(paste0(JOBID,'_Strategy_',i,'_Points_Results.pdf'),w=20,h=15)
-#   print(a)
-#   dev.off()
-# }
-
-# for(i in unique(RES1$par)){
-#   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=Strategy)) +
-#     #geom_point(cex=0.5)+
-#     geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#     xlab('Breeding cycles')+
-#     ylab(i)+
-#     facet_grid(GS_Model ~ Intensity)+
-#     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
-#   
-#   pdf(paste0(JOBID,'_Strategy_',i,'_Lines_Results.pdf'),w=20,h=15)
-#   print(a)
-#   dev.off()
-# }
-
-### compare Intensity-----------------------------------------------------------
-# for(i in unique(RES1$par)){
-#   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=as.factor(Intensity))) +
-#     geom_point(cex=0.5)+
-#     # geom_smooth(method = "loess",lwd=1,se=FALSE) +
-#     xlab('Breeding cycles')+
-#     ylab(i)+
-#     facet_grid( Strategy ~ GS_Model)+
-#     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
-#   
-#   pdf(paste0(JOBID,'_Intensity_',i,'_Points_Results.pdf'),w=20,h=15)
-#   print(a)
-#   dev.off()
-# }
-
-# for(i in unique(RES1$par)){
-#   a <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=as.factor(Intensity))) +
-#     #geom_point(cex=0.5)+
-#     geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#     xlab('Breeding cycles')+
-#     ylab(i)+
-#     facet_grid( Strategy ~ GS_Model)+
-#     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
-#   
-#   pdf(paste0(JOBID,'_Intensity_',i,'_Lines_Results.pdf'),w=20,h=15)
-#   print(a)
-#   dev.off()
-# }
 
 ### Analysis of genetic mean --------------------------------------------------
 RES_sel <- RES1[RES1$par %in% c('Mu'),]
@@ -576,6 +457,7 @@ RES_x <- transform(RES_x,
                    iGS_Model=as.factor(iGS_Model),
                    iStrategy=as.factor(iStrategy))
 write.csv(RES_x,paste0(JOBID,'_o_Results_meanMelt.csv'),row.names = F)
+
 ### by mean GS MOdels-----------------------------------------------------------
 for(i in unique(RES_x$variable)){
   a <- ggplot(RES_x[RES_x$variable %in% i,],aes(x=sim, y=value,color=iGS_Model)) +
@@ -591,30 +473,6 @@ for(i in unique(RES_x$variable)){
   plot(a)
   dev.off()
 }
-# ### by mean Strategy -----------------------------------------------------------
-# for(i in unique(RES_x$variable)){
-#   a <- ggplot(RES_x[RES_x$variable %in% i,],aes(x=sim, y=value,color=iStrategy)) +
-#     geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#     xlab('Breeding cycles')+
-#     ylab(i)+
-#     facet_grid(iGS_Model~iIntensity)+
-#     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
-#   pdf(paste0(JOBID,'_Gmean_Strategy_',i,'_Results.pdf'),w=20,h=15)
-#   plot(a)
-#   dev.off()
-# }
-# ### by mean GS MOdels-----------------------------------------------------------
-# for(i in unique(RES_x$variable)){
-#   a <- ggplot(RES_x[RES_x$variable %in% i,],aes(x=sim, y=value,color=as.factor(iIntensity))) +
-#     geom_smooth(method = "loess",lwd=2,se=FALSE) +
-#     xlab('Breeding cycles')+
-#     ylab(i)+
-#     facet_grid(iStrategy~iGS_Model)+
-#     ggtitle(paste("NF1:",NF1,"|NF2:",NF2,"|segSites:",segSites,"|nQtlPerChr:" ,nQtlPerChr, '|nSnpPerChr:',nSnpPerChr))
-#   pdf(paste0(JOBID,'_Gmean_Intensity_',i,'_Results.pdf'),w=20,h=15)
-#   plot(a)
-#   dev.off()
-# }
 
 ### Analysis of mean by regression ---------------------------------------------
 RES_sel <- RES1[RES1$par %in% c('Mu') & !(RES1$GS_Model %in% c('Random')),]

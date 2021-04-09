@@ -2,13 +2,12 @@
 ## Packagers -------------------------------------------------------------------
 rm(list=ls())
 if(TRUE){
-  #source('Founder_pop.R')
   load('Founders.RData')
 }else{
   library('AlphaSimR')
   set.seed(123)
-  Ne <- 106  # Tsuda 2015 BMC
-  segSites  <-  round(20000/20,0)  # Genome sequence of the palaeopolyploid soybean
+  Ne <- 106  
+  segSites  <-  round(20000/20,0)  
   founderPop <- quickHaplo(nInd=200,
                            nChr=20,
                            segSites=segSites,
@@ -21,20 +20,14 @@ Xpackagers <- c('AlphaSimR','bWGR','parallel','foreach','doParallel',
                 'reshape','ggplot2','gridExtra','lubridate','plyr',
                 'ranger','Rcpp','keras','verification','rrBLUP')
 XXX <- lapply(Xpackagers, function(x){suppressMessages(require(x,quietly = TRUE, character.only = TRUE))})
-#Rcpp::sourceCpp('dnn_chol_norm.cpp')
 # Simulation Parameters  -------------------------------------------------------
 Number_of_runs = 2
 Number_of_generations = 200
-Intensity <- c(2.5,5,7.5,10)/100#c(0.005,0.01,0.025,0.05)
-NF1 <-  300#200 ## NUmber of new population to be created 
-NF2 <- 50#200 ### Number of individual by population in F2 and F_infinity
+Intensity <- c(2.5,5,7.5,10)/100
+NF1 <-  300 ## NUmber of new population to be created 
+NF2 <- 50 ## Number of individual by population in F2
 GS_Model <- list(
-  #'XGB' = function(y,gen){require(xgboost); X = as(data.matrix(gen), "dgCMatrix"); fit0 = xgboost(data=X,label=y,params=list(subsample=0.25),nrounds=20,objective="reg:squarederror"); return(list(hat=predict(fit0,X)))},
-  #'DNN' = function(y,gen){FNN(as.matrix(y),gen)},
   'RF' = function(y,gen,...){list(hat=ranger::ranger(y~.,data.frame(y=y,gen),verbose = FALSE, save.memory = TRUE,write.forest = FALSE,...)$predictions)},
-  #'RKHS' = function(y,gen){ K = GAU(gen); diag(K)=diag(K)+0.00001; E = eigen(K,symmetric = T); fit = emML(y,E$vectors,E$values); return(fit)},
-  #'BayesCpi'=BayesCpi,
-  #'BayesDpi'=BayesDpi,
   'GBLUP'=emML,
   'RR'=emRR,
   'BayesA'=emBA,
@@ -52,9 +45,8 @@ Sel_Strategy <- as.character(c('WBF', # Within the best family
 ))
 # Genetics parameters ----------------------------------------------------------
 POPBestIntensity <- 0.3
-NCgs <- 3    
+NCgs <- 3    # number of generations for use in prediction
 ## Trait parameter -------------------------------------------------------------
-#GxE_corr = 0.4912 ;#By_Loc_H2 = 0.0971 ; #Across_Loc_H2 = 0.5769;#h2= 0.12; #Acroos location 77; # GxE = 77; #Env = 120
 mean = 60 # From SoyNAN 
 var = 77  # From SoyNAN 
 varGxE = 77 # From SoyNAN 
@@ -68,7 +60,7 @@ POSSI <- expand.grid(Sel_Strategy=as.character(Sel_Strategy),
                      Dmodel=1:length(GS_Model))
 cat(paste('Number of Simulation: ',Number_of_runs*length(Intensity)*length(GS_Model)*length(Sel_Strategy),'\n'))
 ## Founder POP and Simulation Parameters ----------------------------------------
-nSnpPerChr <-  round(6000/20,0) # Illumina 20K same soyNAN http://journals.atlas-publishing.org/index.php/PGGB/article/view/154
+nSnpPerChr <-  round(6000/20,0) 
 nQtlPerChr <- segSites * 0.7
 SP <- SimParam$new(founderPop)
 SP$addSnpChip(nSnpPerChr=nSnpPerChr)
@@ -80,14 +72,13 @@ SP$addTraitAEG(nQtlPerChr=nQtlPerChr,
                varGxE = varGxE,
                corA =corA,
                corGxE = corGxE)
-SP$setVarE(varE=varEnv) ##0.281 from soyNAN ##0.281 from soyNAN
+SP$setVarE(varE=varEnv) 
 # function ---------------------------------------------------------------
 Mysimu <- function(j,...){
   run <- POSSI[j,'run']
   Dmodel <- POSSI[j,'Dmodel']
   Int <- POSSI[j,'Intensity']
   Strategy <- as.character(POSSI[j,'Sel_Strategy'])
-  #cat(paste('Simu: ',sprintf("%04i",j),'time: ',Sys.time(),'\n'))
   pop = newPop(founderPop, simParam=SP)
   genMean = c();genVar = c();H2 = c();Accuracy = c();nIndSel = c();
   AccuracyF = c();AccuracyGvPhe = c();AccuracyPheEbv = c();CRPS=c();
@@ -150,22 +141,11 @@ Mysimu <- function(j,...){
     CRPS = c(CRPS,crps(as.numeric(pop@ebv),c(mean(pop@gv),sd(pop@gv)))$CRPS)
     NIndSel = c(NIndSel, nIndSel)
     Npred = c(Npred,nrow(pheno_MC))
-    # Ppairs <- GGally::ggpairs(data.frame(Pheno=pop@pheno,gv=pop@gv,ebv=pop@ebv),#mapping=ggplot2::aes(colour = 'blue'),
-    #                           upper = list(continuous = GGally::wrap("cor", method= "spearman")),
-    #                           lower=list(continuous=function(data, mapping, ...){ 
-    #                             ggplot(data = data, mapping = mapping, ...) + 
-    #                               geom_point(...,size = 1) +
-    #                               geom_abline(...)+
-    #   scale_y_continuous(limits = c(50,150)) +
-    #   scale_x_continuous(limits = c(50,150))}))+
-    #   labs(title=paste(names(GS_Model)[Dmodel], as.character(Strategy), 'Generation: ',i))
-    # print(Ppairs)
     cat(paste('Simu: ',sprintf("%04i",j),'Generation: ',sprintf("%03i",i),'time: ',Sys.time(),'Processing: ',
               sprintf("%03i",round(as.numeric(as.duration(interval(Time_started,ymd_hms(Sys.time()))),"minutes"))
               ),'min model: ',names(GS_Model)[Dmodel],'\n')) ## Remove
     
   }
-  # Store run 
   RES <- list()
   RES[[paste0(names(GS_Model)[Dmodel],'_',Strategy,'_',Int,'_',run)]] <- t(unlist(list(GS_Model=names(GS_Model)[Dmodel],
                                                                                        Strategy=as.character(Strategy),
@@ -202,12 +182,10 @@ if(os == 'Windows'){
                                    revtunnel = TRUE,
                                    outfile='',
                                    useXDR = TRUE)
-  #clusterSetRNGStream(cl,7777777)
   doParallel::registerDoParallel(cl=cl)
   lP <- foreach(j = 1:nrow(POSSI),
                 .packages = Xpackagers,
                 .verbose=FALSE,
-                #.export = ls(globalenv()),
                 .inorder=FALSE) %dopar% {
                   tryCatch(Mysimu(j),error=function(e){return('try-error')})
                 }
@@ -217,8 +195,6 @@ RES <- plyr::ldply(lapply(lP[sapply(lP,function(x){return(!(x=='try-error'))})],
 JOBID <- Sys.getenv("LSB_JOBID")
 write.csv(RES,paste0(JOBID,'_o_Results.csv'),row.names = F)
 save.image(file=paste0(JOBID,'_All.RData'))
-#RES <- read.csv('203825_o_Results.csv')
-#load('203825_All.RData')
 ### Get results and print ------------------------------------------------------
 RES1 <- melt(RES[,-1],id=1:3)
 RES1$par <- gsub('[0-9]','',RES1$variable)
@@ -258,7 +234,7 @@ pdf(paste0(JOBID,'_ResultsStrategy.pdf'),w=20,h=65)
 eval(parse(text=eval(paste('grid.arrange(',paste0(paste0('plots[["',names(plots),'"]]'),collapse=','),',nrow=',length(names(plots)),')'))))
 dev.off()
 
-### compare Intensity-----------------------------------------------------------
+### Compare Intensity-----------------------------------------------------------
 plots <- list()
 for(i in unique(RES1$par)){
   plots[[i]] <- ggplot(RES1[RES1$par %in% i,],aes(x=sim, y=value,color=as.factor(Intensity))) +
@@ -496,4 +472,3 @@ pNs <- ggplot(RES1[RES1$par %in% c('IndSel'),],aes(x=sim, y=value,color=GS_Model
 pdf(paste0(JOBID,'_ResultsAllPoints.pdf'),w=20,h=65)
 grid.arrange(pMu,pGv,pHe,pAc,pAcGvPhe,pAcPheEbv,pCRPS,pNp,pNs,nrow = 9)
 dev.off()
-
